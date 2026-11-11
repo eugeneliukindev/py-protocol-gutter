@@ -3,6 +3,9 @@
 PyCharm plugin: shows which classes satisfy a `typing.Protocol` structurally (without inheriting it),
 like GoLand does for Go interfaces.
 
+![Gutter icons and tooltip](docs/marketplace/1-gutter-icons.png)
+![Protocol -> implementations, class -> protocols](docs/marketplace/2-both-directions.png)
+
 - Gutter icon on a Protocol -> classes that implement it.
 - Gutter icon on a class -> protocols it satisfies.
 - Go to Implementation (Ctrl+Alt+B) on a Protocol also lists implicit implementers.

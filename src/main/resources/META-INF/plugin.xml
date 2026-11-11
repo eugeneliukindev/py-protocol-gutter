@@ -1,0 +1,24 @@
+<idea-plugin>
+    <id>dev.pyprotocolgutter</id>
+    <name>Python Protocol Implementations</name>
+    <vendor url="https://github.com/eugeneliukindev/py-protocol-gutter">Eugene Liukin</vendor>
+    <description><![CDATA[
+        Shows which classes structurally satisfy a <code>typing.Protocol</code> without inheriting from it,
+        the way GoLand shows implicit Go interface implementations.
+        <ul>
+            <li>Gutter icon on a Protocol: classes that implement it.</li>
+            <li>Gutter icon on a class: protocols it satisfies.</li>
+            <li>Go to Implementation (Ctrl+Alt+B) on a Protocol includes implicit implementers.</li>
+        </ul>
+        Only classes in project sources are searched.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.python</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.lineMarkerProvider language="Python"
+                                        implementationClass="dev.pyprotocolgutter.ProtocolLineMarkerProvider"/>
+        <definitionsScopedSearch implementation="dev.pyprotocolgutter.ProtocolImplementationsSearch"/>
+    </extensions>
+</idea-plugin>

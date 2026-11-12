@@ -8,9 +8,10 @@
         <ul>
             <li>Gutter icon on a Protocol: classes that implement it.</li>
             <li>Gutter icon on a class: protocols it satisfies.</li>
-            <li>Go to Implementation (Ctrl+Alt+B) on a Protocol includes implicit implementers.</li>
+            <li>Callback protocols (only <code>__call__</code>): functions whose signature matches, and on a function the protocols it satisfies.</li>
+            <li>Go to Implementation (Ctrl+Alt+B) on a Protocol includes implicit implementers and matching functions.</li>
         </ul>
-        Only classes in project sources are searched.
+        Only the module of the class and the modules linked to it are searched, not libraries or other repos opened in the same project.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>

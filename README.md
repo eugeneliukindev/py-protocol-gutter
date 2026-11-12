@@ -8,11 +8,15 @@ like GoLand does for Go interfaces.
 
 - Gutter icon on a Protocol -> classes that implement it.
 - Gutter icon on a class -> protocols it satisfies.
-- Go to Implementation (Ctrl+Alt+B) on a Protocol also lists implicit implementers.
+- Callback protocol (its only member is `__call__`): a gutter icon lists module-level functions with a matching
+  signature (computed on click), and a function shows the callback protocols it satisfies.
+  A `__call__(self, *args, **kwargs)` matches everything, so such protocols are skipped.
+- Go to Implementation (Ctrl+Alt+B) on a Protocol also lists implicit implementers and matching functions.
 - Toggle: Settings | Editor | General | Gutter Icons | "Python Protocol: implicit implementations".
 
 Matching is PyCharm's own `PyTypeChecker.match`, so the result agrees with what PyCharm
-highlights for `x: Storage = FileStore()`. Only project sources are searched.
+highlights for `x: Storage = FileStore()`. Only the class's module and the modules linked to it are searched:
+libraries and other repos opened as separate modules of the same project are left out.
 The project needs a Python interpreter: without one `typing.Protocol` does not resolve and nothing is shown.
 
 Known limits: attribute-only protocols are not matched, and a class that inherits every

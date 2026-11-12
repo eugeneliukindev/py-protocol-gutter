@@ -1,5 +1,6 @@
 package dev.pyprotocolgutter
 
+import com.jetbrains.python.PyNames
 import com.jetbrains.python.codeInsight.typing.getProtocolMembers
 import com.jetbrains.python.codeInsight.typing.isProtocol
 import com.jetbrains.python.psi.PyClass
@@ -15,6 +16,9 @@ interface ClassIndex {
 
     /** Classes that list `Protocol` among their bases. */
     fun protocols(): Collection<PyClass>
+
+    /** Module-level functions: candidates for callback protocols. */
+    fun topLevelFunctions(): Collection<PyFunction>
 }
 
 /**
@@ -43,6 +47,34 @@ class ProtocolSearch(private val index: ClassIndex, private val context: TypeEva
             .filter { it.isProtocol(context) }
             .filter { protocol -> protocol.getType(context)?.toInstance()?.let { satisfies(cls, protocol, it) } == true }
             .sortedBy { it.qualifiedName ?: it.name }
+    }
+
+    /** True for a callback protocol: its only member is `__call__`, and that `__call__` does not accept anything at all. */
+    fun isCallbackProtocol(protocol: PyClass): Boolean = callbackProtocolType(protocol) != null
+
+    /** Module-level functions whose signature matches a callback protocol. Empty for any other protocol. */
+    fun matchingFunctions(protocol: PyClass): List<PyFunction> {
+        val protocolType = callbackProtocolType(protocol) ?: return emptyList()
+        // shortcut: every module-level function is type-checked, callers compute this lazily; add a parameter-count prefilter if it gets slow.
+        return index.topLevelFunctions()
+            .filter { PyTypeChecker.match(protocolType, context.getType(it), context) }
+            .sortedBy { it.qualifiedName ?: it.name }
+    }
+
+    /** Callback protocols this function matches. */
+    fun protocolsOf(function: PyFunction): List<PyClass> =
+        index.protocols()
+            .filter { protocol -> callbackProtocolType(protocol)?.let { PyTypeChecker.match(it, context.getType(function), context) } == true }
+            .sortedBy { it.qualifiedName ?: it.name }
+
+    private fun callbackProtocolType(protocol: PyClass): PyClassLikeType? {
+        if (!protocol.isProtocol(context)) return null
+        val protocolType = protocol.getType(context)?.toInstance() ?: return null
+        if (protocolType.getProtocolMembers(context).mapNotNull { it.name }.toSet() != setOf(PyNames.CALL)) return null
+        val call = protocol.findMethodByName(PyNames.CALL, true, context) ?: return null
+        // (*args, **kwargs) matches every function: that is noise, not a contract.
+        if (call.parameterList.hasPositionalContainer() && call.parameterList.hasKeywordContainer()) return null
+        return protocolType
     }
 
     private fun satisfies(cls: PyClass, protocol: PyClass, protocolType: PyClassLikeType): Boolean =

@@ -29,3 +29,13 @@ class BrokenStore:
 
 class Connection:
     def close(self) -> None: ...
+
+
+class Handler(Protocol):
+    def __call__(self, event: str) -> int: ...
+
+
+def on_event(event: str) -> int: ...
+
+
+def on_number(event: int) -> int: ...

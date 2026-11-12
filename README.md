@@ -15,8 +15,8 @@ like GoLand does for Go interfaces.
 - Toggle: Settings | Editor | General | Gutter Icons | "Python Protocol: implicit implementations".
 
 Matching is PyCharm's own `PyTypeChecker.match`, so the result agrees with what PyCharm
-highlights for `x: Storage = FileStore()`. Only the class's module and the modules linked to it are searched:
-libraries and other repos opened as separate modules of the same project are left out.
+highlights for `x: Storage = FileStore()`. Only the file's git repository is searched (the nearest folder
+with `.git` above it; outside git, its content root): libraries and other repos opened in the same project are left out.
 The project needs a Python interpreter: without one `typing.Protocol` does not resolve and nothing is shown.
 
 Known limits: attribute-only protocols are not matched, and a class that inherits every

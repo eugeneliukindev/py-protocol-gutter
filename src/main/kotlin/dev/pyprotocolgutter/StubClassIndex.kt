@@ -9,13 +9,13 @@ import com.jetbrains.python.PythonFileType
 import com.jetbrains.python.psi.PyClass
 import com.jetbrains.python.psi.PyFile
 import com.jetbrains.python.psi.PyFunction
-import com.jetbrains.python.psi.stubs.PyFunctionNameIndex
+import com.jetbrains.python.psi.stubs.PyClassAttributesIndex
 import com.jetbrains.python.psi.stubs.PySuperClassIndex
 
 /** Stub-index lookups limited to one codebase, see [codebaseScope]. */
 class StubClassIndex(private val project: Project, private val scope: GlobalSearchScope) : ClassIndex {
-    override fun classesDefining(methodName: String): Collection<PyClass> =
-        PyFunctionNameIndex.find(methodName, project, scope).mapNotNull { it.containingClass }
+    override fun classesDeclaring(memberName: String): Collection<PyClass> =
+        StubIndex.getElements(PyClassAttributesIndex.KEY, memberName, project, scope, PyClass::class.java)
 
     override fun protocols(): Collection<PyClass> =
         StubIndex.getElements(PySuperClassIndex.KEY, "Protocol", project, scope, PyClass::class.java)

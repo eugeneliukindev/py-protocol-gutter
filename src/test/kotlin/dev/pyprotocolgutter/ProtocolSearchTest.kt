@@ -15,11 +15,11 @@ class ProtocolSearchTest : BasePlatformTestCase() {
     override fun setUp() {
         super.setUp()
         // No Python SDK in light tests, so a local typing module gives Protocol its "typing.Protocol" name.
-        myFixture.addFileToProject("typing.py", "class Protocol: pass\n")
+        myFixture.addFileToProject("typing.py", "class Protocol: pass\n\ndef overload(f): return f\n")
         val file = myFixture.configureByText(
             "store.py",
             """
-            from typing import Protocol
+            from typing import Protocol, overload
 
             class Storage(Protocol):
                 def save(self, key: str) -> None: ...
@@ -45,6 +45,16 @@ class ProtocolSearchTest : BasePlatformTestCase() {
             def on_event(event: str) -> int: ...
 
             def wrong_event(event: int, extra: int) -> int: ...
+
+            @overload
+            def overloaded(event: str) -> int: ...
+            def overloaded(event): ...
+
+            class HasName(Protocol):
+                name: str
+
+            class Person:
+                name: str = ""
             """.trimIndent(),
         ) as PyFile
         classes = file.topLevelClasses.associateBy { it.name!! }
@@ -56,6 +66,11 @@ class ProtocolSearchTest : BasePlatformTestCase() {
     fun testProtocolListsOnlyImplicitMatches() {
         val storage = classes.getValue("Storage")
         assertEquals(listOf("FileStore"), names(protocolSearchFor(storage)!!.implementations(storage)))
+    }
+
+    fun testAttributeOnlyProtocolFindsImplementers() {
+        val hasName = classes.getValue("HasName")
+        assertEquals(listOf("Person"), names(protocolSearchFor(hasName)!!.implementations(hasName)))
     }
 
     fun testClassListsProtocolsItSatisfies() {
@@ -84,7 +99,8 @@ class ProtocolSearchTest : BasePlatformTestCase() {
     fun testCallbackProtocolListsMatchingFunctions() {
         val handler = classes.getValue("Handler")
         val search = protocolSearchFor(handler)!!
-        assertEquals(listOf("on_event"), names(search.matchingFunctions(handler)))
+        // The @overload stub is skipped, its implementation is listed once.
+        assertEquals(listOf("on_event", "overloaded"), names(search.matchingFunctions(handler)))
         assertEmpty(search.matchingFunctions(classes.getValue("Storage")))
     }
 
@@ -103,5 +119,11 @@ class ProtocolSearchTest : BasePlatformTestCase() {
         val found = DefinitionsScopedSearch.search(classes.getValue("Handler")).findAll()
         assertContainsElements(found, functions.getValue("on_event"))
         assertDoesntContain(found, functions.getValue("wrong_event"))
+    }
+
+    fun testSameNamedProtocolsAreToldApartInTooltip() {
+        myFixture.addFileToProject("other.py", "from typing import Protocol\n\nclass Handler(Protocol):\n    def __call__(self, event: str) -> int: ...\n")
+        val gutters = myFixture.findAllGutters().mapNotNull { it.tooltipText }
+        assertContainsElements(gutters, "Satisfies protocol: other.Handler, store.Handler")
     }
 }

@@ -11,6 +11,7 @@ like GoLand does for Go interfaces.
 - Callback protocol (its only member is `__call__`): a gutter icon lists module-level functions with a matching
   signature (computed on click), and a function shows the callback protocols it satisfies.
   A `__call__(self, *args, **kwargs)` matches everything, so such protocols are skipped.
+  `@overload` stubs are not functions of their own: only the implementation is listed.
 - Go to Implementation (Ctrl+Alt+B) on a Protocol also lists implicit implementers and matching functions.
 - Toggle: Settings | Editor | General | Gutter Icons | "Python Protocol: implicit implementations".
 
@@ -19,8 +20,11 @@ highlights for `x: Storage = FileStore()`. Only the file's git repository is sea
 with `.git` above it; outside git, its content root): libraries and other repos opened in the same project are left out.
 The project needs a Python interpreter: without one `typing.Protocol` does not resolve and nothing is shown.
 
-Known limits: attribute-only protocols are not matched, and a class that inherits every
-protocol method from a base without defining any itself is not found (its base is).
+Protocols that plain `object` already satisfies (only `__hash__`, `__eq__`, `__str__`...) are skipped:
+every class would match them.
+
+Known limit: a class that inherits every protocol member from a base without declaring any itself
+is not found (its base is).
 
 ## Build and run
 

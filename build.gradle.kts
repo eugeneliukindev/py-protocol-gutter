@@ -42,5 +42,5 @@ intellijPlatform {
 
 // runIde opens the demo project right away.
 tasks.runIde {
-    argumentProviders += CommandLineArgumentProvider { listOf("demo", "demo/store.py").map { layout.projectDirectory.file(it).asFile.absolutePath } }
+    argumentProviders += CommandLineArgumentProvider { listOf("demo", "demo/store.py", "demo/edge_cases.py").map { layout.projectDirectory.file(it).asFile.absolutePath } }
 }

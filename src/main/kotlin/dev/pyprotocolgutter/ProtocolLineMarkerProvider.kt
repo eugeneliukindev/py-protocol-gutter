@@ -10,6 +10,7 @@ import com.intellij.psi.PsiNamedElement
 import com.jetbrains.python.psi.PyClass
 import com.jetbrains.python.psi.PyFile
 import com.jetbrains.python.psi.PyFunction
+import com.jetbrains.python.psi.PyQualifiedNameOwner
 import javax.swing.Icon
 
 class ProtocolLineMarkerProvider : LineMarkerProviderDescriptor() {
@@ -51,12 +52,15 @@ class ProtocolLineMarkerProvider : LineMarkerProviderDescriptor() {
         marker(element, search.protocolsOf(function), AllIcons.Gutter.ImplementingMethod, SATISFIES)?.let(result::add)
     }
 
-    private fun marker(element: PsiElement, targets: List<PsiNamedElement>, icon: Icon, title: String): LineMarkerInfo<*>? {
+    private fun <T> marker(element: PsiElement, targets: List<T>, icon: Icon, title: String): LineMarkerInfo<*>?
+        where T : PsiNamedElement, T : PyQualifiedNameOwner {
         if (targets.isEmpty()) return null
+        val repeated = targets.groupingBy { it.name }.eachCount().filterValues { it > 1 }.keys
         return NavigationGutterIconBuilder.create(icon)
             .setTargets(targets)
             .setPopupTitle(title)
-            .setTooltipText("$title: " + targets.joinToString { it.name ?: "?" })
+            // Two classes with one name (in different files) are told apart by the qualified name.
+            .setTooltipText("$title: " + targets.joinToString { (if (it.name in repeated) it.qualifiedName else it.name) ?: "?" })
             .createLineMarkerInfo(element)
     }
 
